@@ -251,6 +251,13 @@ def plotchains(chain, npar, alpha=0.2):
     return fig
 
 
+def acceptance_fraction(chain):
+    count = 0
+    for i in range(chain.shape[0] - 1):
+        count += np.sum( np.all( np.not_equal(chain[i, :, :], chain[i+1, :, :]), axis=1))
+    return count / (i * chain.shape[1])
+
+
 def GR_diagnostic(sampler_chain):
     '''Gelman & Rubin check for convergence.'''
     m, n, ndim = np.shape(sampler_chain)
