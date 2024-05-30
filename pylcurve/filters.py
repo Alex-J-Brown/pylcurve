@@ -18,7 +18,8 @@ class filters:
                  fpath=resource_filename('pylcurve', 'data/filter_profiles/')):
 
         choices = ['hcam', 'ucam', 'ucam_s', 'ucam_super', 'ucam_sloan',
-                   'ucam_old', 'uspec', 'sdss', 'usno40', 'panstarrs', 'gaiaEDR3', '2MASS', 'GALEX', 'WISE']
+                   'ucam_old', 'uspec', 'sdss', 'usno40', 'panstarrs',
+                   'gaiaEDR3', '2MASS', 'GALEX', 'WISE', 'TESS', 'JWST_NIRCAM']
         self.inst = instrument
         if self.inst not in choices:
             raise ValueError('"{}" is not a valid instrument'
@@ -26,7 +27,8 @@ class filters:
         self.fpath = fpath
         self.wl, self.trans, self.bands = self.load_bandpasses(self.fpath, self.inst)
         self.eff_wl = self.get_pivot_wl()
-        self.gaia_syn_zp = dict(G=-26.4897, BP=-25.96551, RP=-27.21634, J=-28.76149, H=-29.864425, Ks=-30.92063)
+        self.vega_syn_zp = dict(G=-26.48986, BP=-25.96551, RP=-27.21639,
+                                J=-28.76149, H=-29.864425, Ks=-30.92063)
 
 
     def load_bandpasses(self, fpath, inst):
@@ -132,8 +134,8 @@ class filters:
         chosen filter. Calculations done in /Angstrom units. Outputs in units
         of erg/s/cm^2/Angstrom
         """
-        
-        flux = flux.to(u.erg/u.s/u.cm/u.cm/u.AA, equivalencies=u.spectral_density(wave))
+        if flux.unit != u.erg/u.s/u.cm/u.cm/u.AA:
+            flux = flux.to(u.erg/u.s/u.cm/u.cm/u.AA, equivalencies=u.spectral_density(wave))
         trans_interpolator = interp1d(self.wl[band], self.trans[band],
                                       bounds_error=False, fill_value=0)
         trans_new = trans_interpolator(wave)
@@ -141,7 +143,7 @@ class filters:
         return out * (u.erg/u.s/u.cm/u.cm/u.AA)
 
 
-    def synphot_gaia_mag(self, wave, flux, band):
+    def synphot_vega_mag(self, wave, flux, band):
         """
         Calculates mean (photon weighted) flux density from given spectrum in
         erg/s/cm^2/Angstrom through a given GAIA or 2MASS filter and outputs
@@ -151,5 +153,5 @@ class filters:
         if band not in ['G', 'BP', 'RP', 'J', 'H', 'Ks']:
             raise ValueError('{} not a GAIA/2MASS passband'.format(band))
         target_flux = self.synphot_ccd_lam(wave, flux, band)
-        gaia_mag = -2.5 * np.log10(target_flux.to_value(u.W/u.m/u.m/u.nm)) + self.gaia_syn_zp[band]
-        return gaia_mag
+        vega_mag = -2.5 * np.log10(target_flux.to_value(u.W/u.m/u.m/u.nm)) + self.vega_syn_zp[band]
+        return vega_mag
