@@ -16,9 +16,10 @@ fpath = resource_filename('pylcurve', 'data/gravity_darkening_coeffs/')
 
 hcam = filters()
 sdss = filters('sdss')
+tess = filters('TESS')
 gdark_interpolator = dict()
 
-for band in hcam.bands + sdss.bands:
+for band in hcam.bands + sdss.bands + tess.bands:
     fname = glob(fpath + 'MS_GDCs_{}.dat'.format(band))[0]
     gdcs = ascii.read(fname)
     coords_in = list(zip(gdcs['Teff'], gdcs['log(g)']))

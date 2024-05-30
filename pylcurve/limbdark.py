@@ -1,7 +1,7 @@
 from astropy.table import Table
 from pkg_resources import resource_filename
 from scipy.interpolate import LinearNDInterpolator
-from .filters import filters
+from pylcurve.filters import filters
 
 
 """
@@ -16,14 +16,15 @@ Outputs interpolators as dictionary
 
 hcam = filters('hcam')
 sdss = filters('sdss')
+tess = filters('TESS')
 
 
 fpath = resource_filename('pylcurve', 'data/ld_coeffs/')
 ld_wd_interpolators = dict()
 ld_ms_interpolators = dict()
 ld_interpolator = dict()
-for band in hcam.bands + sdss.bands:
-    filename_wd = f"'{fpath}WD/DA_LDCs_{band}.dat"
+for band in hcam.bands + sdss.bands + tess.bands:
+    filename_wd = f"{fpath}WD/DA_LDCs_{band}.dat"
     tab_wd = Table.read(filename_wd, format='ascii')
     wd_coords_in = list(zip(tab_wd['Teff'], tab_wd['log(g)']))
     wd_coords_out = list(zip(tab_wd['a1'], tab_wd['a2'],

@@ -19,6 +19,7 @@ hcam = filters('hcam')
 ucam = filters('ucam')
 ucam_sloan = filters('ucam_sloan')
 sdss = filters('sdss')
+tess = filters('TESS')
 sol = c.value
 h_plnk = h.value
 k_b = k_B.value
@@ -27,7 +28,8 @@ filt_dict = dict(
     hcam=hcam,
     ucam=ucam,
     ucam_sloan=ucam_sloan,
-    sdss=sdss
+    sdss=sdss,
+    tess=tess
 )
 
 
@@ -84,8 +86,11 @@ def get_gdc(teff, logg, band, beta=None):
         if teff < 2000: teff = 2000
         beta = beta_interpolator(np.log10(teff))
     if teff < 2300: teff = 2300
+    if (teff < 3500) & (band == "tess"): teff = 3500
     if band in hcam.bands:
         return beta * gdark_interpolator[band](teff, logg)[0] + gdark_interpolator[band](teff, logg)[1]
+    elif band in tess.bands:
+        return gdark_interpolator[band](teff, logg)[0]
     else:
         return beta * gdark_interpolator[band+'s'](teff, logg)[0] + gdark_interpolator[band+'s'](teff, logg)[1]
 
