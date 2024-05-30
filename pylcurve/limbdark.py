@@ -2,7 +2,6 @@ from astropy.table import Table
 from pkg_resources import resource_filename
 from scipy.interpolate import LinearNDInterpolator
 from .filters import filters
-from glob import glob
 
 
 """
@@ -24,7 +23,7 @@ ld_wd_interpolators = dict()
 ld_ms_interpolators = dict()
 ld_interpolator = dict()
 for band in hcam.bands + sdss.bands:
-    filename_wd = glob(fpath + 'DA_LDCs_*_{}.dat'.format(band))[0]
+    filename_wd = f"'{fpath}WD/DA_LDCs_{band}.dat"
     tab_wd = Table.read(filename_wd, format='ascii')
     wd_coords_in = list(zip(tab_wd['Teff'], tab_wd['log(g)']))
     wd_coords_out = list(zip(tab_wd['a1'], tab_wd['a2'],
@@ -33,7 +32,7 @@ for band in hcam.bands + sdss.bands:
                                                      wd_coords_out,
                                                      rescale=True)
 
-    filename_ms = glob(fpath + 'MS_LDCs_*_{}.dat'.format(band))[0]
+    filename_ms = f"{fpath}MS/MS_LDCs_{band}.dat"
     tab_ms = Table.read(filename_ms, format='ascii')
     ms_coords_in = list(zip(tab_ms['Teff'], tab_ms['log(g)']))
     ms_coords_out = list(zip(tab_ms['a1'], tab_ms['a2'],
