@@ -19,7 +19,7 @@ class filters:
 
         choices = ['hcam', 'ucam', 'ucam_s', 'ucam_super', 'ucam_sloan',
                    'ucam_old', 'uspec', 'sdss', 'usno40', 'panstarrs',
-                   'gaiaDR3', '2MASS', 'GALEX', 'WISE', 'TESS', 'JWST_NIRCAM']
+                   'gaiadr3', '2mass', 'galex', 'wise', 'tess', 'jwst_nircam']
         self.inst = instrument
         if self.inst not in choices:
             raise ValueError('"{}" is not a valid instrument'
