@@ -16,7 +16,7 @@ Outputs interpolators as dictionary
 
 hcam = filters('hcam')
 sdss = filters('sdss')
-tess = filters('TESS')
+tess = filters('tess')
 
 
 fpath = resource_filename('pylcurve', 'data/ld_coeffs/')
