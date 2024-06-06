@@ -1,0 +1,62 @@
+model_file: "model_files/WDdM.mod"
+run_name: "ZTFJ071843.74-085232.2_CO_new"
+light_curves:
+  us: "light_curves/ZTFJ071843.74-085232.2/ZTFJ071843.74-085232.2_run013_1669222169040_us_fc.dat"
+  gs: "light_curves/ZTFJ071843.74-085232.2/ZTFJ071843.74-085232.2_run013_1669222169040_gs_fc.dat"
+  is: "light_curves/ZTFJ071843.74-085232.2/ZTFJ071843.74-085232.2_run013_1669222169040_is_fc.dat"
+flux_uncertainty:
+  us: 0.02154
+  gs: 0.02057
+  is: 0.02055
+wd_core_comp: "CO"
+wd_model: "Claret"
+ms_model: "BT-SETTL-CIFIST"
+filter_system: "ucam"
+secondary_mr: "empirical"
+fit_beta: false
+r2_pdf: false
+irr_infl: true
+free_t2: true
+period: 0.215811345
+params:
+  t1: 18855
+  t2_u: 3089
+  t2_g: 3114
+  t2_i: 3117
+  m1: 0.79286
+  m2: 0.305700
+  incl: 84.609
+  t0: 59283.102610793
+  parallax: 2.1601
+  ebv: 0.0624
+param_bounds:
+  t1: [3750, 80000]
+  t2_u: [1200, 6900]
+  t2_g: [1200, 6900]
+  t2_i: [1200, 6900]
+  m1: [0.3, 1.2]
+  m2: [0.06, 0.65]
+  incl: [70, 90]
+  t0: [59283.1025, 59283.1027]
+  parallax: [1.73572, 3.04264]
+  ebv: [0, 0.094]
+priors: # [pdf, mean, std]
+  parallax: ["gaussPos", 2.38918, 0.21782]
+  ebv: ["gaussPos", 0.04, 0.027]
+model_settings:
+  delta_phase: 1.0e-7
+  primary_fine_resolution: 200
+  secondary_fine_resolution: 70
+  primary_coarse_resolution: 80
+  secondary_coarse_resolution: 70
+  true_north_pole: false
+  primary_roche: false
+  secondary_roche: true
+  primary_eclipse: true
+  secondary_eclipse: false
+  use_radii: true
+run_settings:
+  walkers: 100
+  burnin: 0
+  production: 11000
+  n_cores: 3
