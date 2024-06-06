@@ -2,11 +2,10 @@ import emcee
 from multiprocessing import Pool, cpu_count
 import numpy as np
 import astropy.units as u
-import matplotlib.pyplot as plt
-from scipy.optimize import minimize
+from scipy.optimize import minimize, least_squares
 import os
 import shutil
-from astropy.table import Table
+from trm import roche
 
 from pylcurve.lcurve import Lcurve
 from pylcurve.modelling import Model
@@ -18,7 +17,7 @@ import pylcurve.plotting as p
 
 """
 This script fits flux calibrated, multi-band primary eclipse photometry of
-WD+M/WD+WD binaries using an MCMC method to run Tom Marsh's LROCHE routine.
+WD-WD/WD-dM binaries using an MCMC method to run Tom Marsh's LROCHE routine.
 Using mass-radius relations it can determine stellar masses and effective
 temperatures for both components.
 """
@@ -68,35 +67,6 @@ class EclipseLC(Model):
         self.core_pars['eclipse1'] = int(self.config['model_settings']['primary_eclipse'])
         self.core_pars['eclipse2'] = int(self.config['model_settings']['secondary_eclipse'])
         self.lcurve_model.set(self.core_pars)
-
-    
-    def vary_model_res(self, model_pars):
-        """
-        Varies the resolution of lcurve's stellar grids to try and blur out any
-        systematic grid effects that could cause issues for the inclination
-        and radii.
-        """
-        model_pars['nlat1f'] = np.random.randint(self.core_pars['nlat1f'] - 5,
-                                                 self.core_pars['nlat1f'] + 6)
-        model_pars['nlat1c'] = np.random.randint(self.core_pars['nlat1c'] - 5,
-                                                 self.core_pars['nlat1c'] + 6)
-        model_pars['nlat2f'] = np.random.randint(self.core_pars['nlat2f'] - 5,
-                                                 self.core_pars['nlat2f'] + 6)
-        model_pars['nlat2c'] = np.random.randint(self.core_pars['nlat2c'] - 5,
-                                                 self.core_pars['nlat2c'] + 6)
-
-
-    def t2_free(self, band):
-        if band == 'us' or band == 'u':
-            return self.t2_u
-        if band == 'gs' or band == 'g':
-            return self.t2_g
-        if band == 'rs' or band == 'r':
-            return self.t2_r
-        if band == 'is' or band == 'i':
-            return self.t2_i
-        if band == 'zs' or band == 'z':
-            return self.t2_z
     
 
     def t2eff_free(self, band):
@@ -126,7 +96,7 @@ class EclipseLC(Model):
             return self.slope_i
         if band == 'zs' or band == 'z':
             return self.slope_z
-
+        
 
     def set_model(self, band, factor=1.0):
         """"
@@ -175,7 +145,9 @@ class EclipseLC(Model):
             lcurve_pars['t2'] = self.t2
 
         lcurve_pars['r1'] = self.r1/self.a  # scale to separation units
-        lcurve_pars['r2'] = utils.Rva_to_Rl1(q, self.r2/self.a)  # scale and correct
+        # Correct scaled volume-averaged radius to scaled radius towards L1.
+        rl2_a = utils.Rva_to_Rl1(q, self.r2/self.a)
+        lcurve_pars['r2'] = rl2_a
         lcurve_pars['t0'] = self.t0
         lcurve_pars['period'] = self.config['period']
         lcurve_pars['tperiod'] = self.config['period']
@@ -183,25 +155,34 @@ class EclipseLC(Model):
         lcurve_pars['q'] = q
         if hasattr(self, 'slope_i'):
             lcurve_pars['slope'] = self.slope(band)
-        self.vary_model_res(lcurve_pars)
-        if not self.config['fit_beta']:
+        # self.vary_model_res(lcurve_pars)
+        if not hasattr(self, 'beta'):
             lcurve_pars['gravity_dark2'] = utils.get_gdc(t2, self.log_g2, band)
         else:
             lcurve_pars['gravity_dark2'] = utils.get_gdc(t2, self.log_g2, band, self.beta)
 
         lcurve_pars['wavelength'] = self.cam.eff_wl[band].to_value(u.nm)
+
+        # Set switchpoint from low-res to hi-res star grids just before
+        # first contact point (for a detached system, may need altering for CV).
         lcurve_pars['phase1'] = (np.arcsin(lcurve_pars['r1']
                                            + lcurve_pars['r2'])
                                            / (2 * np.pi))+0.001
         lcurve_pars['phase2'] = 0.5 - lcurve_pars['phase1']
 
+        # Calculate RL fill factor
+        self.ffac = rl2_a/(1.-roche.xl1(q))
+
+        # Set LCURVE paramters
         self.lcurve_model.set(lcurve_pars)
-        # self.lcurve_model.set(utils.get_ldcs(self.t1, logg_1=self.log_g1, band=band,
-        #                                 star_type_1='WD', teff_2=self.t2_free(band),
-        #                                 logg_2=self.log_g2, star_type_2='MS'))
+        
+        # Set limb darkening parameters/
         self.lcurve_model.set(utils.get_ldcs(self.t1, logg_1=self.log_g1, band=band,
                                              star_type_1='WD', teff_2=t2,
                                              logg_2=self.log_g2, star_type_2='MS'))
+        # Add interesting (non-fitted) parameters to the chain file.
+        # Allows assessing of covariances with radii and fill factor etc.
+        self.blobs = [self.log_g1, self.r1, self.r2, self.a, self.ffac]
 
         if not self.lcurve_model.ok():
             raise ValueError('invalid parameter combination')
@@ -232,11 +213,12 @@ class EclipseLC(Model):
 
         """
         self.set_model(band, factor)
+        # Calculate modelled WD flux given parameters
         wd_model_flux = utils.integrate_disk(self.t1, self.log_g1, self.r1,
                                              self.parallax, self.ebv, band,
                                              self.config['wd_model'],
                                              self.config['filter_system'])
-        ym, wdwarf = self.lcurve_model(self.lightcurves[band])
+        t, ym, wdwarf = self.lcurve_model(self.lightcurves[band])
         return ym, wdwarf, wd_model_flux
 
 
@@ -256,12 +238,20 @@ class EclipseLC(Model):
             prior = m.Prior(*self.config['priors'][var])
             val += prior.ln_prob(self.parameter_vector[idx])
         if self.config['free_t2']:
-            prior_ui = m.Prior('gauss', 0, 80)
-            prior_gi = m.Prior('gauss', 0, 30)
-            val+= prior_ui.ln_prob(self.parameter_vector[self.parameter_names.index('t2_u')]
-                                   - self.parameter_vector[self.parameter_names.index('t2_i')])
-            val+= prior_gi.ln_prob(self.parameter_vector[self.parameter_names.index('t2_g')]
-                                   - self.parameter_vector[self.parameter_names.index('t2_i')])
+            prior_ui = m.Prior('gauss', 0, 85)
+            prior_gi = m.Prior('gauss', 0, 35)
+            prior_ri = m.Prior('gauss', 0, 40)
+            prior_zi = m.Prior('gauss', 0, 60)
+            val += prior_ui.ln_prob(self.parameter_vector[self.parameter_names.index('t2_u')]
+                                    - self.parameter_vector[self.parameter_names.index('t2_i')])
+            val += prior_gi.ln_prob(self.parameter_vector[self.parameter_names.index('t2_g')]
+                                    - self.parameter_vector[self.parameter_names.index('t2_i')])
+            if hasattr(self, 't2_r'):
+                val += prior_ri.ln_prob(self.parameter_vector[self.parameter_names.index('t2_r')]
+                                        - self.parameter_vector[self.parameter_names.index('t2_i')])
+            if hasattr(self, 't2_z'):
+                val += prior_zi.ln_prob(self.parameter_vector[self.parameter_names.index('t2_z')]
+                                        - self.parameter_vector[self.parameter_names.index('t2_i')])
         return val
 
     
@@ -286,7 +276,7 @@ class EclipseLC(Model):
             Factor to scale radius of secondary star by
         """
         self.set_parameter_vector(params)
-        t, _, y, ye, w, _ = np.loadtxt(self.lightcurves[band]).T
+        _, _, y, ye, w, _ = np.loadtxt(self.lightcurves[band]).T
 
         # check model params are valid - checks against bounds
         lp = self.log_prior()
@@ -295,7 +285,9 @@ class EclipseLC(Model):
         else:
             try:
                 ym, wdwarf, wd_flux = self.get_value(band, factor=factor)
+                # Chisq from lightcurve
                 chisq = np.sum(w * ((y - ym)/ye)**2)
+                # Chisq from SED
                 chisq += ((wdwarf - wd_flux)**2 / (wdwarf*self.flux_uncertainty[band])**2)
             except ValueError as err:
                 # invalid lcurve params
@@ -332,16 +324,17 @@ class EclipseLC(Model):
 if __name__ == "__main__":
     import argparse
     from ruamel.yaml import YAML
-    os.nice(5)
 
-    folders = ['config_files', 'light_curves', 'MCMC_runs', 'model_files']    
+    folders = ["config_files", "light_curves", "MCMC_runs", "model_files"]    
     for folder in folders:
         if not os.path.isdir(folder):
             os.makedirs(folder)
 
 
 #TODO:
-    conf_file = 'example.yaml'
+    # Specify config .yaml file (assumes this in in the config_files folder).
+    conf_file = "ZTFJ071843.74-085232.2_CO_new.yaml"
+
 
 
     # parser.add_argument('--conf', '-c', action='store', default=conf_file)
@@ -349,7 +342,6 @@ if __name__ == "__main__":
 
     yaml = YAML(typ='safe')
     with open('config_files/{}'.format(conf_file)) as f:
-    # with open('MCMC_runs/{}/{}.yaml'.format(conf_file, conf_file)) as f:
         config = yaml.load(f)
     run_settings = config['run_settings']
 
@@ -410,7 +402,7 @@ if __name__ == "__main__":
         for band in light_curves.keys():
             val += model.log_probability(params, band, factor)
         val += model.log_prior()
-        return val
+        return val, *model.blobs
 
     
     def inf_to_small(x):
@@ -422,7 +414,7 @@ if __name__ == "__main__":
 
     def min_func(x):
         return -inf_to_small(log_probability(x))
-
+    
 
     def min_func_ls(x):
         return np.sqrt(-2 * inf_to_small(log_probability(x)))
@@ -433,6 +425,13 @@ if __name__ == "__main__":
         print("Fitting start position...")
         soln = minimize(min_func, np.array(x0), method='Nelder-Mead', bounds=bounds, *args, **kwargs)
         return soln.x
+    
+
+    def fit_start_pos_ls(x0, *args, **kwargs):
+        # bounds = [tuple(value) for value in config['param_bounds'].values()]
+        print("Fitting start position...")
+        res = least_squares(min_func_ls, np.array(x0), method='lm', x_scale=x0, *args, **kwargs)
+        return res.x
 
     
     def clip_lnprob(chain, clip_margin=100):
@@ -444,7 +443,8 @@ if __name__ == "__main__":
     
     def write_models(params, fname):
         model.set_parameter_vector(params)
-        for band in model.cam.bands:
+        for band in light_curves.keys():
+        # for band in model.cam.bands:
             fname_out = f"{fname}_{band}.mod"
             model.write_model(band, fname_out)
 
@@ -461,8 +461,8 @@ if __name__ == "__main__":
     def mcmc_results(chain_file, par_names, run_name, burn_in=1000, clip=None, thin=1, measure='median', show=False):
         chain = m.readchain(chain_file)[burn_in:, :, :]
         if clip:
-            chain = clip_lnprob(chain=chain, clip_margin=clip)
-        par_names.append('ln_prob')
+            chain = clip_lnprob(chain, clip)
+        par_names = par_names + ['logg1', 'r1', 'r2', 'a', 'ffac', 'ln_prob']
         ndim = chain.shape[-1]
         fchain = m.flatchain(chain, ndim, thin=thin)
 
@@ -477,12 +477,14 @@ if __name__ == "__main__":
         p.plot_traces(chain, par_names, name=f"MCMC_runs/{run_name}/Trace_{run_name}.pdf")
         p.plot_CP(fchain, par_names, composition=config['wd_core_comp'],
                   name=f"MCMC_runs/{run_name}/CP_{run_name}.pdf")
-        p.plot_LC(model, Pars[:-1], show=show, save=True,
+        # p.plot_CP_reduced(fchain, par_names, composition=config['wd_core_comp'],
+        #                   name=f"../../../Thesis/cornerplots/CP_{run_name}_reduced.pdf")
+        p.plot_LC(model, Pars[:-6], show=show, save=True,
                   name=f"MCMC_runs/{run_name}/LC_{run_name}.pdf",
                   dataname=f"MCMC_runs/{run_name}/model_{run_name}")
-        p.plot_SED(model, Pars[:-1], show=show, save=True,
+        p.plot_SED(model, Pars[:-6], show=False, save=True,
                    name=f"MCMC_runs/{run_name}/SED_{run_name}.pdf")
-        write_models(Pars[:-1], fname=f"MCMC_runs/{run_name}/{run_name}")
+        write_models(Pars[:-6], fname=f"MCMC_runs/{run_name}/{run_name}")
 
 
     if args.fit:
@@ -517,7 +519,7 @@ if __name__ == "__main__":
                 raise ValueError(f"Walker number mismatch. Existing chain file has {nwalkers_chain} walkers"
                                  f" but {args.nwalkers} walkers were requested.")
             args.nprod -= nsteps
-            p0 = chain[-1, :, :-1]
+            p0 = chain[-1, :, :-6]
 
         pool = Pool(args.nthreads)
         sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, pool=pool)
@@ -542,4 +544,4 @@ if __name__ == "__main__":
 
     else:
         chain_file = 'MCMC_runs/{}/{}'.format(run_name, chain_fname)
-        mcmc_results(chain_file, nameList, run_name, burn_in=0, clip=100, measure='median', show=True)
+        mcmc_results(chain_file, nameList, run_name, burn_in=0, clip=None, measure='median', show=True)
