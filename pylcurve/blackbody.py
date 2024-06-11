@@ -32,7 +32,7 @@ def build_interpolator(BB_table, bands):
 
 wd_models = ['Koester', 'Bergeron']
 ms_models = ['PHOENIX-HiRes', 'BT-SETTL', 'BT-SETTL-CIFIST', 'old']
-instruments = ['hcam', 'ucam', 'ucam_sloan', 'sdss', 'tess']
+instruments = ['hcam', 'ucam', 'ucam_sloan', 'sdss', 'tess', 'ztf']
 for model in ms_models:
     ms_instr_interpolator = dict()
     for instrument in instruments:
@@ -48,12 +48,13 @@ for model in wd_models:
         tab_WD = Table.read(fpath + f"Twd_to_Tbb_{model}_{instrument}.dat", format='ascii.tab')
         wd_instr_interpolator[instrument] = build_interpolator(tab_WD, cam.bands)
     wd_interpolator[model] = wd_instr_interpolator
-hcam = filters()
+hcam = filters("hcam")
+ucam = filters("ucam")
 tess = filters("tess")
-tab_WD = Table.read(fpath + 'Twd_to_Tbb_Claret_hcam.dat', format='ascii.tab')
 wd_instr_interpolator = dict()
+tab_WD = Table.read(fpath + 'Twd_to_Tbb_Claret_hcam.dat', format='ascii.tab')
 wd_instr_interpolator['hcam'] = build_interpolator(tab_WD, hcam.bands)
-wd_instr_interpolator['ucam'] = build_interpolator(tab_WD, hcam.bands)
+wd_instr_interpolator['ucam'] = build_interpolator(tab_WD, ucam.bands)
 tab_WD = Table.read(fpath + 'Twd_to_Tbb_Claret_tess.dat', format='ascii.tab')
 wd_instr_interpolator['tess'] = build_interpolator(tab_WD, tess.bands)
 wd_interpolator['Claret'] = wd_instr_interpolator
