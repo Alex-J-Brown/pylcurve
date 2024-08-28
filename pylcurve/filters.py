@@ -1,6 +1,6 @@
 import numpy as np
 from os import path
-from scipy.integrate import simps
+from scipy.integrate import simpson
 import astropy.units as u
 from glob import glob
 from scipy.interpolate import interp1d
@@ -66,8 +66,8 @@ class filters:
         """
         Calculates pivot wavelength given wavelength and throughput arrays.
         """
-        top = simps(trans, wave)
-        bottom = simps(trans * wave**-2, wave)
+        top = simpson(trans, wave)
+        bottom = simpson(trans * wave**-2, wave)
         pivot = (top / bottom)**0.5
         return pivot
 
@@ -99,7 +99,7 @@ class filters:
                                     bounds_error=False, fill_value=0)
         trans_new = trans_interpolator(wave)
         filtered_spec = flux * trans_new
-        fLam = (simps(filtered_spec, wave) / simps(trans_new, wave))
+        fLam = (simpson(filtered_spec, wave) / simpson(trans_new, wave))
         return fLam * u.Jansky
 
 
@@ -114,7 +114,7 @@ class filters:
         trans_interpolator = interp1d(self.wl[band], self.trans[band],
                                       bounds_error=False, fill_value=0)
         trans_new = trans_interpolator(wave)
-        out = simps(flux * trans_new * (1/wave), wave) / simps(trans_new / wave, wave)
+        out = simpson(flux * trans_new * (1/wave), wave) / simpson(trans_new / wave, wave)
         return out * u.Jansky
 
 
@@ -140,7 +140,7 @@ class filters:
         trans_interpolator = interp1d(self.wl[band], self.trans[band],
                                       bounds_error=False, fill_value=0)
         trans_new = trans_interpolator(wave)
-        out = simps(flux * trans_new * wave, wave) / simps(trans_new * wave, wave)
+        out = simpson(flux * trans_new * wave, wave) / simpson(trans_new * wave, wave)
         return out * (u.erg/u.s/u.cm/u.cm/u.AA)
 
 
