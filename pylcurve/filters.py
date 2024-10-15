@@ -66,8 +66,8 @@ class filters:
         """
         Calculates pivot wavelength given wavelength and throughput arrays.
         """
-        top = simpson(trans, wave)
-        bottom = simpson(trans * wave**-2, wave)
+        top = simpson(trans, x=wave)
+        bottom = simpson(trans * wave**-2, x=wave)
         pivot = (top / bottom)**0.5
         return pivot
 
@@ -99,7 +99,7 @@ class filters:
                                     bounds_error=False, fill_value=0)
         trans_new = trans_interpolator(wave)
         filtered_spec = flux * trans_new
-        fLam = (simpson(filtered_spec, wave) / simpson(trans_new, wave))
+        fLam = (simpson(filtered_spec, x=wave) / simpson(trans_new, x=wave))
         return fLam * u.Jansky
 
 
@@ -114,7 +114,7 @@ class filters:
         trans_interpolator = interp1d(self.wl[band], self.trans[band],
                                       bounds_error=False, fill_value=0)
         trans_new = trans_interpolator(wave)
-        out = simpson(flux * trans_new * (1/wave), wave) / simpson(trans_new / wave, wave)
+        out = simpson(flux * trans_new * (1/wave), x=wave) / simpson(trans_new / wave, x=wave)
         return out * u.Jansky
 
 
@@ -140,7 +140,7 @@ class filters:
         trans_interpolator = interp1d(self.wl[band], self.trans[band],
                                       bounds_error=False, fill_value=0)
         trans_new = trans_interpolator(wave)
-        out = simpson(flux * trans_new * wave, wave) / simpson(trans_new * wave, wave)
+        out = simpson(flux * trans_new * wave, x=wave) / simpson(trans_new * wave, x=wave)
         return out * (u.erg/u.s/u.cm/u.cm/u.AA)
 
 
