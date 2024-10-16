@@ -262,6 +262,7 @@ def plot_CP(fchain, namelist, composition='CO', name='CP.pdf', **kwargs):
                   't0': r'$\rm{\Delta T_{0}~(10^{-5}~d})$',
                   'parallax': r'$\rm{\pi~(mas)}$',
                   'ebv': r'$E(B-V)$',
+                  'beta': r'$\beta$',
                   'ln_prob': r'$\rm{ln}(p)$'
                   }
     labels = [label_dict[name] if name in label_dict else name for name in namelist]
