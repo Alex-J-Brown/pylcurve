@@ -1,6 +1,6 @@
 import numpy as np
 import astropy.units as u
-from scipy.integrate import quad, simps
+from scipy.integrate import quad
 from scipy.stats import skewnorm
 from astropy.constants import G, sigma_sb, c, h, k_B
 from astropy.modeling.physical_models import BlackBody
@@ -13,6 +13,7 @@ from .rochedistortion import roche_interpolator
 from trm import roche
 from dust_extinction.parameter_averages import F19
 
+
 bb = BlackBody()
 ext = F19(Rv=3.1)
 hcam = filters('hcam')
@@ -20,20 +21,26 @@ ucam = filters('ucam')
 ucam_sloan = filters('ucam_sloan')
 sdss = filters('sdss')
 tess = filters('tess')
+ztf = filters('ztf')
 sol = c.value
 h_plnk = h.value
 k_b = k_B.value
+
 
 filt_dict = dict(
     hcam=hcam,
     ucam=ucam,
     ucam_sloan=ucam_sloan,
     sdss=sdss,
-    tess=tess
+    tess=tess,
+    ztf=ztf
 )
 
 
 def planck(wl, temp):
+    """
+    Planck law. Input in Angstroms and Kelvin, output in Janskys.
+    """
     const = ((2 * h_plnk * sol) / (wl * 10 ** -10) ** 3)
     frac = 1 / (np.exp((h_plnk * sol) / ((wl*10 ** -10) * temp * k_b)) - 1)
     return const * frac / 10 ** -26
@@ -197,6 +204,10 @@ def t2phase(t, t0, P):
 
 
 def contact_points(t0, P, q, incl, r1_a, r2_a, ntheta=100):
+    """
+    Calculates eclipse contact points, outputting None for each contact point
+    not found (i.e. in partial or non-eclipsing systems).
+    """
     try:
         c3, c4 = roche.wdphases(q, incl, r1_a, r2_a, ntheta=100)
     except roche.RocheError:
@@ -233,10 +244,10 @@ def scalefactor(a, parallax, wavelength=550*u.nm, Ebv=0):
     ext = F19(Rv=3.1)
     extinction_fac = ext.extinguish(wavelength, Ebv)
     sf = (a**2 / d**2) * 10**26 * extinction_fac
-    return sf
+    return sf.to_value(u.dimensionless_unscaled)
 
 
-def integrate_disk(teff, logg, radius, parallax, Ebv, band, wd_model='Claret', instrument='ucam'):
+def integrate_disk(teff, logg, radius, parallax, Ebv, band, star_type='WD', model='Claret', instrument='ucam'):
     # if wd_model != 'Claret':
     #     cam = filters(wd_model)
     # else:
@@ -245,11 +256,11 @@ def integrate_disk(teff, logg, radius, parallax, Ebv, band, wd_model='Claret', i
 
     # ext = F19(Rv=3.1)
     # Central intensity in Janskys from blackbody temperature for model
-    t_bb = float(bb_interpolator['WD'][wd_model][instrument][band](teff, logg))
+    t_bb = float(bb_interpolator[star_type][model][instrument][band](teff, logg))
     # I_cen = (bb.evaluate(cam.eff_wl[band], t_bb*u.K, scale=1) * u.sr).to_value(u.Jansky)
     I_cen = planck(cam.eff_wl[band].value, t_bb)
     # Get limb darkening for model
-    c1, c2, c3, c4 = ld_interpolator['WD'][band](teff, logg)
+    c1, c2, c3, c4 = ld_interpolator[star_type][band](teff, logg)
     # Integrate total flux of disk from central intensity and limb-darkening law
     int_flux = 2 * np.pi * I_cen * quad(Claret_LD_law, 0, 1, args=(c1, c2, c3, c4))[0]
     # Scale to distance and account for extinction
