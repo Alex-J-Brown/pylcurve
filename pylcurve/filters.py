@@ -124,8 +124,7 @@ class filters:
         spectrum through the chosen filter and outputs this in AB magnitudes.
         """
         
-        synflux = self.synphot_ccd(wave, flux, band)
-        mag = -2.5 * np.log10(synflux.to_value(u.Jy)) + 8.90
+        mag = self.synphot_ccd(wave, flux, band).to_value(u.ABmag)
         return mag
     
 
