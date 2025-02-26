@@ -9,7 +9,7 @@ from .blackbody import bb_interpolator
 from .limbdark import ld_interpolator
 from .gravitydark import gdark_interpolator, beta_interpolator
 from .massradius import mr_interpolator
-from .rochedistortion import roche_interpolator
+from .rochedistortion import roche_interpolator_l1, roche_interpolator_va
 from trm import roche
 from dust_extinction.parameter_averages import F19
 
@@ -124,8 +124,17 @@ def Rva_to_Rl1(q, r_VA_a):
     Correct scaled volume-averaged radius to roche distorted radius towards L1
     given the mass ratio (M2/M1).
     """
-    r_L1_a = roche_interpolator(q, r_VA_a)
+    r_L1_a = roche_interpolator_l1(q, r_VA_a)
     return r_L1_a
+
+
+def Rl1_to_Rva(q, rl1_a):
+    """
+    Correct scaled volume-averaged radius to roche distorted radius towards L1
+    given the mass ratio (M2/M1).
+    """
+    rva_a = roche_interpolator_va(q, rl1_a)
+    return rva_a
 
 
 def log_g(m, r):
@@ -187,6 +196,31 @@ def rv_semiamplitudes(m1, m2, P, i):
     const = (2 * np.pi * G * np.sin(i*u.deg)**3) / (P * (m1 + m2)**2)
     k1, k2 = ((const * m**3)**(1/3)).to_value(u.km/u.s)
     return k1, k2
+
+
+def vsini(q, r2, a, k2):
+    """
+    Calculates radial velocity semiamplitudes.
+    Parameters
+    -----------
+    q : float
+        binary mass ratio, m2/m1
+    r2 : float
+        radius of star 2 in solar units
+    a : float
+        binary separation in solar units
+    k2 : float
+        radial velocity semiamplitude of star 2 in km/s
+    Returns
+    -------
+    vsini : float
+         rotational velocity of star 2 in km/s
+    """
+    r2 = r2 * u.Rsun
+    a = a * u.Rsun
+    k2 = k2 * u.km/u.s
+    vsini = (k2 * (1 + q) * (r2/a)).to_value(u.km/u.s)
+    return vsini
 
 
 def m1m2(vel_scale, q, P):

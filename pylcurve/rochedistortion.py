@@ -14,9 +14,14 @@ def build_roche_interpolator():
 
     q, r2_a_L1, r2_va_a = np.loadtxt(fname, unpack=True)
 
-    coords_in = list(zip(q, r2_va_a))
-    coords_out = list(r2_a_L1)
-    roche_interpolator = LinearNDInterpolator(coords_in, coords_out, rescale=True)
-    return roche_interpolator
+    coords_in_l1 = list(zip(q, r2_va_a))
+    coords_out_l1 = list(r2_a_L1)
 
-roche_interpolator = build_roche_interpolator()
+    coords_in_va = list(zip(q, r2_a_L1))
+    coords_out_va = list(r2_va_a)
+
+    roche_interpolator_l1 = LinearNDInterpolator(coords_in_l1, coords_out_l1, rescale=True)
+    roche_interpolator_va = LinearNDInterpolator(coords_in_va, coords_out_va, rescale=True)
+    return roche_interpolator_l1, roche_interpolator_va
+
+roche_interpolator_l1, roche_interpolator_va = build_roche_interpolator()
