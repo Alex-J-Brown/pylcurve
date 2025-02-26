@@ -274,19 +274,46 @@ class Lcurve(OrderedDict):
             else:
                 print("Can't find white dwarf's contribution. lroche out of date.")
                 chisq = wnok = wdwarf = None
+            subout = [out for out in output if out.startswith('log10(g1 [cgs])')]
+            if len(subout) == 1:
+                eq = subout[0].find('=')
+                logg1 = float(subout[0][eq+2:])
+            else:
+                print("Can't find log(g) of white dwarf.")
+            subout = [out for out in output if out.startswith('log10(g2 [cgs])')]
+            if len(subout) == 1:
+                eq = subout[0].find('=')
+                logg2 = float(subout[0][eq+2:])
+            else:
+                print("Can't find log(g) of secondary.")
+            subout = [out for out in output if out.startswith('Vol-averaged r1')]
+            if len(subout) == 1:
+                eq = subout[0].find('=')
+                r1 = float(subout[0][eq+2:])
+            else:
+                print("Can't find Vol-averaged radius of white dwarf.")
+            subout = [out for out in output if out.startswith('Vol-averaged r2')]
+            if len(subout) == 1:
+                eq = subout[0].find('=')
+                r2 = float(subout[0][eq+2:])
+            else:
+                print("Can't find Vol-averaged radius of secondary.")
 
         else:
-            chisq = wnok = wdwarf = None
+            chisq = wnok = wdwarf = logg1 = logg2 = r1 = r2 = None
             print('Output from lroche failure')
-        return chisq, wnok, wdwarf
+        return chisq, wnok, wdwarf, logg1, logg2, r1, r2
 
 
-    def __call__(self, data, scale_factor=None):
+    def __call__(self, data, scale_factor=None, extra=False):
         output, fname = self.run(data, scale_factor)
         t, _, ym, _, _, _ = np.loadtxt(fname).T
         os.remove(fname)
-        chisq, wnok, wdwarf = self.get_output(output)
-        return t, ym, wdwarf
+        chisq, wnok, wdwarf, logg1, logg2, r1, r2 = self.get_output(output)
+        if extra:
+            return t, ym, wdwarf, logg1, logg2, r1, r2 
+        else:
+            return t, ym, wdwarf
 
 
     def chisq(self, data, scale_factor=None):
