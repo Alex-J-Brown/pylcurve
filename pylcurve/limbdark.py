@@ -18,13 +18,14 @@ def build_ld_interpolator():
     hcam = filters('hcam')
     sdss = filters('sdss')
     tess = filters('tess')
+    bessell = filters('bessell')
 
 
     fpath = resource_filename('pylcurve', 'data/ld_coeffs/')
     ld_wd_interpolators = dict()
     ld_ms_interpolators = dict()
     ld_interpolator = dict()
-    for band in hcam.bands + sdss.bands + tess.bands:
+    for band in hcam.bands + sdss.bands + tess.bands + bessell.bands:
         filename_wd = f"{fpath}WD/DA_LDCs_{band}.dat"
         tab_wd = Table.read(filename_wd, format='ascii')
         wd_coords_in = list(zip(tab_wd['Teff'], tab_wd['log(g)']))

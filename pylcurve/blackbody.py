@@ -28,9 +28,9 @@ def build_bb_interpolator():
     >>> bb_interpolator[star_type][band](Teff, log(g))
     """
     
-    wd_models = ['Koester']
+    wd_models = ['Koester', 'Claret']
     ms_models = ['PHOENIX-HiRes', 'BT-SETTL', 'BT-SETTL-CIFIST']
-    instruments = ['hcam', 'ucam', 'ucam_sloan', 'sdss', 'tess', 'ztf']
+    instruments = ['hcam', 'ucam', 'ucam_sloan', 'sdss', 'tess', 'ztf', 'bessell']
     
     # fpath = resource_filename('pylcurve', 'data/blackbody_temps/')
     ref = resources.files('pylcurve') / 'data' / 'blackbody_temps'
@@ -41,7 +41,7 @@ def build_bb_interpolator():
             ms_instr_interpolator = dict()
             for instrument in instruments:
                 cam = filters(instrument)
-                tab_MS = Table.read(f"{fpath}/Tms_to_Tbb_{model}_{instrument}.dat", format='ascii.tab')
+                tab_MS = Table.read(f"{fpath}/MS/{model}/Tms_to_Tbb_{model}_{instrument}.dat", format='ascii.tab')
                 ms_instr_interpolator[instrument] = build_subinterpolator(tab_MS, cam.bands)
             ms_interpolator[model] = ms_instr_interpolator
 
@@ -50,19 +50,9 @@ def build_bb_interpolator():
             wd_instr_interpolator = dict()
             for instrument in instruments:
                 cam = filters(instrument)
-                tab_WD = Table.read(f"{fpath}/Twd_to_Tbb_{model}_{instrument}.dat", format='ascii.tab')
+                tab_WD = Table.read(f"{fpath}/WD/{model}/Twd_to_Tbb_{model}_{instrument}.dat", format='ascii.tab')
                 wd_instr_interpolator[instrument] = build_subinterpolator(tab_WD, cam.bands)
             wd_interpolator[model] = wd_instr_interpolator
-        hcam = filters("hcam")
-        ucam = filters("ucam")
-        tess = filters("tess")
-        wd_instr_interpolator = dict()
-        tab_WD = Table.read(f"{fpath}/Twd_to_Tbb_Claret_hcam.dat", format='ascii.tab')
-        wd_instr_interpolator['hcam'] = build_subinterpolator(tab_WD, hcam.bands)
-        wd_instr_interpolator['ucam'] = build_subinterpolator(tab_WD, ucam.bands)
-        tab_WD = Table.read(f"{fpath}/Twd_to_Tbb_Claret_tess.dat", format='ascii.tab')
-    wd_instr_interpolator['tess'] = build_subinterpolator(tab_WD, tess.bands)
-    wd_interpolator['Claret'] = wd_instr_interpolator
 
     bb_interpolator = dict()
     bb_interpolator['MS'] = ms_interpolator

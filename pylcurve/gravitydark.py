@@ -18,9 +18,11 @@ def build_gdark_interpolator():
     hcam = filters()
     sdss = filters('sdss')
     tess = filters('tess')
+    bessell = filters('bessell')
+    
     gdark_interpolator = dict()
 
-    for band in hcam.bands + sdss.bands + tess.bands:
+    for band in hcam.bands + sdss.bands + tess.bands + bessell.bands:
         fname = glob(fpath + 'MS_GDCs_{}.dat'.format(band))[0]
         gdcs = ascii.read(fname)
         coords_in = list(zip(gdcs['Teff'], gdcs['log(g)']))
