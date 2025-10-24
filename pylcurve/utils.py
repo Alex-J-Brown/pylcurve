@@ -100,7 +100,7 @@ def get_gdc(teff, logg, band, beta=None):
     if band in hcam.bands:
         return beta * gdark_interpolator[band](teff, logg)[0] + gdark_interpolator[band](teff, logg)[1]
     elif band in tess.bands or band in bessell.bands:
-        return gdark_interpolator[band](teff, logg)[0]
+        return float(gdark_interpolator[band](teff, logg))
     else:
         return beta * gdark_interpolator[band+'s'](teff, logg)[0] + gdark_interpolator[band+'s'](teff, logg)[1]
 
