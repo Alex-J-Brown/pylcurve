@@ -24,14 +24,19 @@ def plot_LC(model, params, show=True, save=False, name='LC.pdf', dataname=None):
     band_colours = {
         'us': 'cornflowerblue',
         'u': 'cornflowerblue',
+        'U': 'cornflowerblue',
         'gs': 'limegreen',
         'g': 'limegreen',
+        'B': 'limegreen',
         'rs': 'orange',
         'r': 'orange',
+        'V': 'orange',
         'is': 'orangered',
         'i': 'orangered',
+        'R': 'orangered',
         'zs': 'darkred',
-        'z': 'darkred'
+        'z': 'darkred',
+        'I': 'darkred'
     }
 
     annotate_str = {
@@ -44,7 +49,12 @@ def plot_LC(model, params, show=True, save=False, name='LC.pdf', dataname=None):
         'g' : r'$g$',
         'r' : r'$r$',
         'i' : r'$i$',
-        'z' : r'$z$'
+        'z' : r'$z$',
+        'U' : r'$U$',
+        'B' : r'$B$',
+        'V' : r'$V$',
+        'R' : r'$R$',
+        'I' : r'$I$'
     }
 
     n_cols = len(model.lightcurves.keys())
