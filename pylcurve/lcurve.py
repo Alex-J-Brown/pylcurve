@@ -2,7 +2,6 @@ from collections import OrderedDict
 import tempfile
 import os
 import subprocess
-from trm import roche
 import numpy as np
 
 trm_sw = os.environ.get('TRM_SOFTWARE', '/usr/local/ultracam')
