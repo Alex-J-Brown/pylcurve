@@ -9,6 +9,10 @@ trm_sw = os.environ.get('TRM_SOFTWARE', '/usr/local/ultracam')
 lroche = os.path.join(trm_sw, 'bin', 'lcurve', 'lroche')
 tcontrast = os.path.join(trm_sw, 'bin', 'lcurve', 'tcontrast')
 
+try:
+    from trm.roche import xl1
+except ImportError as e:
+    from .utils import xl1
 
 class Lcurve(OrderedDict):
     """
@@ -91,7 +95,7 @@ class Lcurve(OrderedDict):
         return (self.vcheck('q', 0.001, 100.) and self.vcheck('iangle', 0., 90.)
             and self.vcheck('r1', 0., 1.)
             and (float(self['r2'][0]) <= 0.
-                 or self.vcheck('r2', 0., 1-roche.xl1(float(self['q'][0]))))
+                 or self.vcheck('r2', 0., 1-xl1(float(self['q'][0]))))
             and self.vcheck('cphi3', 0., 0.25)
             and self.vcheck('cphi4', float(self['cphi3'][0]), 0.25)
             and self.vcheck('t1', 0., 1.e6)
@@ -120,7 +124,7 @@ class Lcurve(OrderedDict):
                 )
             and (
                  self['add_spot'][0] == '0'
-                 or (self.vcheck('radius_spot', 0., 0.85*roche.xl1(float(self['q'][0])))
+                 or (self.vcheck('radius_spot', 0., 0.85*xl1(float(self['q'][0])))
                      and self.vcheck('length_spot', 0., 10.)
                      and self.vcheck('expon_spot', 0., 30.)
                      and self.vcheck('temp_spot', 0., 1.e6)

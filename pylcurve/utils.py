@@ -10,7 +10,6 @@ from .limbdark import ld_interpolator
 from .gravitydark import gdark_interpolator, beta_interpolator
 from .massradius import mr_interpolator
 from .rochedistortion import roche_interpolator_l1, roche_interpolator_va
-from trm import roche
 from dust_extinction.parameter_averages import F19
 
 
@@ -38,6 +37,30 @@ filt_dict = dict(
     ztf=ztf,
     bessell=bessell
 )
+
+
+def xl1(q):
+    if q <= 0:
+        raise ValueError(f"q = {q} <= 0")
+    from scipy.optimize import newton
+    mu = q/(1+q)
+    a1 = -1+mu
+    d1 = 1*(a2 := 2 - 2*mu)
+    d2 = 2*(a3 := -1 + mu)
+    d3 = 3*(a4 := 1 + 2*mu)
+    d4 = 4*(a5 := -2 - mu)
+    d5 = 5*(a6 := 1)
+
+    def func(x, a6, a5, a4, a3, a2, a1, d5, d4, d3, d2, d1):
+        return x*(x*(x*(x*(x*a6+a5)+a4)+a3)+a2)+a1
+
+    def fprime(x, a6, a5, a4, a3, a2, a1, d5, d4, d3, d2, d1):
+        return x*(x*(x*(x*d5+d4)+d3)+d2)+d1
+
+    x0 = 1/(1+q)
+
+    return newton(func, x0, fprime, args=(a6, a5, a4, a3, a2, a1, d5, d4, d3, d2, d1),
+                  tol=1e-12, maxiter=1000)
 
 
 def planck(wl, temp):
@@ -236,7 +259,10 @@ def m1m2(vel_scale, q, P):
 
 def t2phase(t, t0, P):
     phase = ((t - t0) / P) % 1
-    phase[phase > 0.5] -=1 
+    if isinstance(t, np.ndarray):
+        phase[phase > 0.5] -=1
+    elif phase > 0.5:
+        phase -= 1
     return phase
 
 
@@ -245,9 +271,10 @@ def contact_points(t0, P, q, incl, r1_a, r2_a, ntheta=100):
     Calculates eclipse contact points, outputting None for each contact point
     not found (i.e. in partial or non-eclipsing systems).
     """
+    from trm.roche import wdphases, RocheError
     try:
-        c3, c4 = roche.wdphases(q, incl, r1_a, r2_a, ntheta=100)
-    except roche.RocheError:
+        c3, c4 = wdphases(q, incl, r1_a, r2_a, ntheta=100)
+    except RocheError:
         return None, None, None, None
     t1 = t0 - c4*P
     t2 = t0 - c3*P
