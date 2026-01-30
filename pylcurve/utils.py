@@ -135,7 +135,7 @@ def get_radius(mass, temp=None, star_type='CO',
     and for M-dwarfs ('empirical' or 'baraffe'). For baraffe, tracks of
     different ages can be selected.
     """
-    if star_type=='He' or star_type=='CO' or star_type=='ONe':
+    if star_type=='He' or star_type=='CO' or star_type=='ONe' or star_type=='CO_DB':
         radius = mr_interpolator[star_type](mass, temp)
     elif star_type=='MS':
         if relation=='empirical':
