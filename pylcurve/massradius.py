@@ -9,16 +9,16 @@ mr_interpolator = dict()
 ms_interpolator = dict()
 
 # fpath = resource_filename('pylcurve', 'data/cooling_tracks/')
-ref = resources.files('pylcurve') / 'data' / 'ld_coeffs'
+ref = resources.files('pylcurve') / 'data' / 'cooling_tracks'
 with resources.as_file(ref) as fpath:
-    he = ascii.read(fpath + 'He_tracks_thick.dat')
+    he = ascii.read(f"{fpath}/He_tracks_thick.dat")
     # he = ascii.read(fpath + 'He_tracks.dat')
-    co = ascii.read(fpath + 'CO_tracks.dat')
-    co_DB = ascii.read(fpath + 'MontrealDB.dat')
-    one = ascii.read(fpath + 'ONe_tracks.dat')
-    mass, radius = np.loadtxt(fpath + 'MdwarfMRrel.dat', unpack=True)
-    std_mass, std_radius = np.loadtxt(fpath + 'Mdwarf_stds.dat', unpack=True)
-    baraffe = ascii.read(fpath + 'Baraffe/baraffe.dat')
+    co = ascii.read(f"{fpath}/CO_tracks.dat")
+    co_DB = ascii.read(f"{fpath}/MontrealDB.dat")
+    one = ascii.read(f"{fpath}/ONe_tracks.dat")
+    mass, radius = np.loadtxt(f"{fpath}/MdwarfMRrel.dat", unpack=True)
+    std_mass, std_radius = np.loadtxt(f"{fpath}/Mdwarf_stds.dat", unpack=True)
+    baraffe = ascii.read(f"{fpath}/Baraffe/baraffe.dat")
 
 # he_coords_in = list(zip(he['M'], he['Teff']))
 # he_coords_out = list(he['R'])

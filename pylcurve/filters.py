@@ -5,7 +5,8 @@ import astropy.units as u
 from glob import glob
 from scipy.interpolate import interp1d
 from collections import OrderedDict
-from pkg_resources import resource_filename
+# from pkg_resources import resource_filename
+from importlib import resources
 
 
 class filters:
@@ -14,8 +15,7 @@ class filters:
     super SDSS (HiPERCAM/ULTRACAM), ULTRASPEC, Gaia, & 2MASS filter profiles
     """
     
-    def __init__(self, instrument='hcam',
-                 fpath=resource_filename('pylcurve', 'data/filter_profiles/')):
+    def __init__(self, instrument='hcam'):
 
         choices = ['hcam', 'ucam', 'ucam_s', 'ucam_super', 'ucam_sloan',
                    'ucam_old', 'uspec', 'sdss', 'usno40', 'panstarrs',
@@ -25,8 +25,9 @@ class filters:
         if self.inst not in choices:
             raise ValueError('"{}" is not a valid instrument'
                              .format(self.inst))
-        self.fpath = fpath
-        self.wl, self.trans, self.bands = self.load_bandpasses(self.fpath, self.inst)
+        ref = resources.files('pylcurve') / 'data' / 'filter_profiles'
+        with resources.as_file(ref) as fpath:
+            self.wl, self.trans, self.bands = self.load_bandpasses(fpath, self.inst)
         self.eff_wl = self.get_pivot_wl()
         self.vega_syn_zp = dict(G=-26.48986, BP=-25.96551, RP=-27.21639,
                                 J=-28.76149, H=-29.864425, Ks=-30.92063)
@@ -42,21 +43,21 @@ class filters:
 
         if (inst == 'ucam_sloan') or (inst == 'ucam_old'):
             inst = 'ucam'
-            fnames = [path.split(f)[1] for f in glob(fpath + 'ucam_*.txt')
+            fnames = [path.split(f)[1] for f in glob(f"{fpath}/ucam_*.txt")
                       if 's' not in path.split(f)[1]]
             bands = [path.splitext(fname)[0].split('_')[-1] for fname in fnames]
         elif inst == 'ucam' or inst == 'ucam_s' or inst == 'ucam_super':
             inst = 'ucam'
-            fnames = [path.split(f)[1] for f in glob(fpath +  'ucam_*.txt')
+            fnames = [path.split(f)[1] for f in glob(f"{fpath}/ucam_*.txt")
                       if 's' in path.split(f)[1]]
             bands = [path.splitext(fname)[0].split('_')[-1] for fname in fnames]
         else:
-            fnames = glob(fpath + inst + '_*.txt')
+            fnames = glob(f"{fpath}/{inst}_*.txt")
             fnames_cut = [fname.split('_')[-1] for fname in fnames]
             bands = [fname.split('.')[0] for fname in fnames_cut]
         
         for band in bands:
-            file = (fpath + inst + '_{}.txt'.format(band))
+            file = (f"{fpath}/{inst}_{band}.txt")
             wl[band], trans[band] = np.loadtxt(file, unpack=True)
             wl[band] *= u.AA
         return wl, trans, bands

@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
 from pkg_resources import resource_filename
+from importlib import resources
 
 
 def build_roche_interpolator():
@@ -10,9 +11,10 @@ def build_roche_interpolator():
     
     Outputs interpolator
     """
-    fname = resource_filename('pylcurve', 'data/roche_conversion/roche_grid_new_corr.dat')
+    ref = resources.files('pylcurve') / 'data' / 'roche_conversion'
+    with resources.as_file(ref) as fpath:
 
-    q, r2_a_L1, r2_va_a = np.loadtxt(fname, unpack=True)
+        q, r2_a_L1, r2_va_a = np.loadtxt(f"{fpath}/roche_grid_new_corr.dat", unpack=True)
 
     coords_in_l1 = list(zip(q, r2_va_a))
     coords_out_l1 = list(r2_a_L1)

@@ -12,6 +12,8 @@ try:
     from trm.roche import xl1
 except ImportError as e:
     from .utils import xl1
+except ModuleNotFoundError as e:
+    from .utils import xl1
 
 class Lcurve(OrderedDict):
     """
