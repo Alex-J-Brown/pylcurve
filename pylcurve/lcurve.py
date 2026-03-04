@@ -10,9 +10,7 @@ tcontrast = os.path.join(trm_sw, 'bin', 'lcurve', 'tcontrast')
 
 try:
     from trm.roche import xl1
-except ImportError as e:
-    from .utils import xl1
-except ModuleNotFoundError as e:
+except (ImportError, ModuleNotFoundError) as e:
     from .utils import xl1
 
 class Lcurve(OrderedDict):
