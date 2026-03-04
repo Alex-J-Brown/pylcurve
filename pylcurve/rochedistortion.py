@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
-from pkg_resources import resource_filename
+# from pkg_resources import resource_filename
 from importlib import resources
 
 
