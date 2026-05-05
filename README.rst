@@ -17,9 +17,15 @@ Installation
 The software is written as much as possible to make use of core Python
 components. The third-party requirements are:
 
-- `astropy <http://astropy.org/>`_, a package for astronomical calculations;
+- `roche <https://github.com/Alex-J-Brown/rust-roche>`_ for various utilities related to compact binary systems;
 
-- `emcee <http://http://dfm.io/emcee/current/>`_ for MCMC fitting;
+- `astropy <https://astropy.org/>`_, a package for astronomical calculations;
+
+- `scipy <https://scipy.org/>`_;
+
+- `pandas <https://pandas.pydata.org//>`_;
+
+- `emcee <https://dfm.io/emcee/current/>`_ for MCMC fitting;
 
 - `celerite <https://celerite.readthedocs.io/en/stable/>`_, used for scalable Gaussian processes;
 

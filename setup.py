@@ -12,6 +12,10 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
+    'roche'
+    'pandas'
+    'scipy'
+    'matplotlib'
     'astropy',
     'emcee',
     'corner',
@@ -31,13 +35,13 @@ scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
 
 setup(
     name='pylcurve',
-    version='0.1.7',
+    version='0.1.8',
     description="Python wrapper for lcurve fitting",
     long_description=readme + '\n\n' + history,
     author="Stuart Littlefair",
     author_email='s.littlefair@shef.ac.uk',
-    url='https://github.com/StuartLittlefair/pylcurve',
-    download_url='https://github.com/StuartLittlefair/pylcurve/archive/v0.1.0.tar.gz',
+    url='https://github.com/Alex-J-Brown/pylcurve',
+    download_url='https://github.com/Alex-J-Brown/pylcurve/archive/v0.1.0.tar.gz',
     packages=[
         'pylcurve'
     ],
@@ -61,5 +65,12 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
     ]
 )
