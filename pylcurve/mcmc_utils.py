@@ -228,7 +228,7 @@ def flatchain(chain, npars, nskip=0, thin=1):
 
 
 def readchain(file, nskip=0, thin=1):
-    data = pd.read_csv(file, header=None, compression=None, delim_whitespace=True)
+    data = pd.read_csv(file, header=None, compression=None, sep='\s+')
     data = np.array(data)
     nwalkers = int(data[:, 0].max()+1)
     nprod = int(data.shape[0]/nwalkers)
