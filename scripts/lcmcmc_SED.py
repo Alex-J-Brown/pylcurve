@@ -5,7 +5,7 @@ import astropy.units as u
 from scipy.optimize import minimize, least_squares
 import os
 import shutil
-from trm import roche
+import roche
 
 from pylcurve.lcurve import Lcurve
 from pylcurve.modelling import Model
