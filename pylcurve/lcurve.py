@@ -9,7 +9,7 @@ lroche = os.path.join(trm_sw, 'bin', 'lcurve', 'lroche')
 tcontrast = os.path.join(trm_sw, 'bin', 'lcurve', 'tcontrast')
 
 try:
-    from trm.roche import xl1
+    from roche import xl1
 except (ImportError, ModuleNotFoundError) as e:
     from .utils import xl1
 
