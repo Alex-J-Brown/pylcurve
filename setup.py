@@ -12,10 +12,10 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    'roche'
-    'pandas'
-    'scipy'
-    'matplotlib'
+    'roche',
+    'pandas',
+    'scipy',
+    'matplotlib',
     'astropy',
     'emcee',
     'corner',
