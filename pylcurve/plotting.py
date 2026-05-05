@@ -233,8 +233,8 @@ def plot_SED(model, params, show=True, save=False, name='SED.pdf'):
         ym, wdwarf, wd_model_flux = model.get_value(band)
         ax0.errorbar(model.cam.eff_wl[band].value, wdwarf*1e3,
                     yerr=model.flux_uncertainty[band]*wdwarf*1e3, c='k',
-                    marker='.', elinewidth=1)
-        ax0.scatter(model.cam.eff_wl[band].value, wd_model_flux*1e3, c='r', marker='.')
+                    marker='.', elinewidth=1, zorder=3)
+        ax0.scatter(model.cam.eff_wl[band].value, wd_model_flux*1e3, c='w', edgecolor='k', marker='o', s=50, zorder=2)
         ax1.errorbar(model.cam.eff_wl[band].value, wdwarf*1e3 - wd_model_flux*1e3,
                      yerr=model.flux_uncertainty[band]*wdwarf*1e3, c='k',
                      marker='.', elinewidth=1)
@@ -248,6 +248,8 @@ def plot_SED(model, params, show=True, save=False, name='SED.pdf'):
     ax1.tick_params(top=True, bottom=True, left=True, right=True, direction='in')
     ax0.set_ylim(bottom=0)
     ax0.set_xlim(3300, 9500)
+    ax0.set_ylabel("Flux (mJy)")
+    ax1.set_xlabel(r"$\rm{Wavelength~(\AA)}$")
     yabs_max = abs(max(ax1.get_ylim(), key=abs))
     ax1.set_ylim(-yabs_max, yabs_max)
     plt.setp(ax0.get_xticklabels(), visible=False)
