@@ -271,10 +271,10 @@ def contact_points(t0, P, q, incl, r1_a, r2_a, ntheta=100):
     Calculates eclipse contact points, outputting None for each contact point
     not found (i.e. in partial or non-eclipsing systems).
     """
-    from trm.roche import wdphases, RocheError
+    from roche import wdphases
     try:
-        c3, c4 = wdphases(q, incl, r1_a, r2_a, ntheta=100)
-    except RocheError:
+        c3, c4 = wdphases(q, incl, r1_a, r2_a, ntheta=200)
+    except RuntimeError:
         return None, None, None, None
     t1 = t0 - c4*P
     t2 = t0 - c3*P
