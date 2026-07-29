@@ -5,6 +5,19 @@ from .filters import filters
 from importlib import resources
 
 
+available_models = {
+    "WD": {
+        "Koester": ['hcam', 'ucam', 'ucam_sloan', 'sdss', 'tess', 'ztf', 'bessell', 'galex'],
+        "Claret": ['hcam', 'ucam', 'ucam_sloan', 'sdss', 'tess', 'ztf', 'bessell']
+    },
+    "MS": {
+        "PHOENIX-HiRes": ['hcam', 'ucam', 'ucam_sloan', 'sdss', 'tess', 'ztf', 'bessell'],
+        "BT-SETTL": ['hcam', 'ucam', 'ucam_sloan', 'sdss', 'tess', 'ztf', 'bessell'],
+        "BT-SETTL-CIFIST": ['hcam', 'ucam', 'ucam_sloan', 'sdss', 'tess', 'ztf', 'bessell', 'galex']
+    }
+}
+
+
 def build_subinterpolator(BB_table, bands):
     interpolator = dict()
     teff = BB_table['Teff']
@@ -30,25 +43,25 @@ def build_bb_interpolator():
     
     wd_models = ['Koester', 'Claret']
     ms_models = ['PHOENIX-HiRes', 'BT-SETTL', 'BT-SETTL-CIFIST']
-    instruments = ['hcam', 'ucam', 'ucam_sloan', 'sdss', 'tess', 'ztf', 'bessell']
+    instruments = ['hcam', 'ucam', 'ucam_sloan', 'sdss', 'tess', 'ztf', 'bessell', 'galex']
     
     # fpath = resource_filename('pylcurve', 'data/blackbody_temps/')
     ref = resources.files('pylcurve') / 'data' / 'blackbody_temps'
     with resources.as_file(ref) as fpath:
     
         ms_interpolator = dict()
-        for model in ms_models:
+        for model in available_models['MS'].keys():
             ms_instr_interpolator = dict()
-            for instrument in instruments:
+            for instrument in available_models['MS'][model]:
                 cam = filters(instrument)
                 tab_MS = Table.read(f"{fpath}/MS/{model}/Tms_to_Tbb_{model}_{instrument}.dat", format='ascii.tab')
                 ms_instr_interpolator[instrument] = build_subinterpolator(tab_MS, cam.bands)
             ms_interpolator[model] = ms_instr_interpolator
 
         wd_interpolator = dict()
-        for model in wd_models:
+        for model in available_models['WD'].keys():
             wd_instr_interpolator = dict()
-            for instrument in instruments:
+            for instrument in available_models['WD'][model]:
                 cam = filters(instrument)
                 tab_WD = Table.read(f"{fpath}/WD/{model}/Twd_to_Tbb_{model}_{instrument}.dat", format='ascii.tab')
                 wd_instr_interpolator[instrument] = build_subinterpolator(tab_WD, cam.bands)

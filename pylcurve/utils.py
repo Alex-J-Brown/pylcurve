@@ -22,6 +22,7 @@ sdss = filters('sdss')
 tess = filters('tess')
 ztf = filters('ztf')
 bessell = filters('bessell')
+galex = filters('galex')
 
 sol = c.value
 h_plnk = h.value
@@ -35,7 +36,8 @@ filt_dict = dict(
     sdss=sdss,
     tess=tess,
     ztf=ztf,
-    bessell=bessell
+    bessell=bessell,
+    galex=galex
 )
 
 
