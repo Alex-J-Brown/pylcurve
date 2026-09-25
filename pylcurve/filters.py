@@ -67,8 +67,10 @@ class filters:
         """
         Calculates pivot wavelength given wavelength and throughput arrays.
         """
-        top = simpson(trans, x=wave)
-        bottom = simpson(trans * wave**-2, x=wave)
+        if wave.unit != u.AA:
+            wave = wave.to(u.AA)
+        top = simpson(trans, x=wave.value)
+        bottom = simpson(trans * wave.value**-2, x=wave.value)
         pivot = (top / bottom)**0.5
         return pivot
 
@@ -91,17 +93,18 @@ class filters:
     def synphot(self, wave, flux, band):
         """
         Mean (energy weighted) flux density for a given spectrum through the
-        chosen filter. Calculations done in /Angstrom units. Outputs in units
-        of erg/s/cm^2/Angstrom
+        chosen filter. Calculations done in /Hz units. Outputs in units
+        of Jansky.
         """
-
         flux = flux.to(u.Jansky, equivalencies=u.spectral_density(wave))
         trans_interpolator = interp1d(self.wl[band], self.trans[band],
                                     bounds_error=False, fill_value=0)
-        trans_new = trans_interpolator(wave)
+        if wave.unit != u.AA:
+            wave = wave.to(u.AA)
+        trans_new = trans_interpolator(wave.value)
         filtered_spec = flux * trans_new
-        fLam = (simpson(filtered_spec, x=wave) / simpson(trans_new, x=wave))
-        return fLam * u.Jansky
+        fnu = (simpson(filtered_spec, x=wave.value) / simpson(trans_new, x=wave.value))
+        return fnu * u.Jansky
 
 
     def synphot_ccd(self, wave, flux, band):
@@ -114,8 +117,10 @@ class filters:
         flux = flux.to(u.Jansky, equivalencies=u.spectral_density(wave))
         trans_interpolator = interp1d(self.wl[band], self.trans[band],
                                       bounds_error=False, fill_value=0)
-        trans_new = trans_interpolator(wave)
-        out = simpson(flux * trans_new * (1/wave), x=wave) / simpson(trans_new / wave, x=wave)
+        if wave.unit != u.AA:
+            wave = wave.to(u.AA)
+        trans_new = trans_interpolator(wave.value)
+        out = simpson(flux * trans_new * (1/wave), x=wave.value) / simpson(trans_new / wave, x=wave.value)
         return out * u.Jansky
 
 
@@ -139,8 +144,10 @@ class filters:
             flux = flux.to(u.erg/u.s/u.cm/u.cm/u.AA, equivalencies=u.spectral_density(wave))
         trans_interpolator = interp1d(self.wl[band], self.trans[band],
                                       bounds_error=False, fill_value=0)
-        trans_new = trans_interpolator(wave)
-        out = simpson(flux * trans_new * wave, x=wave) / simpson(trans_new * wave, x=wave)
+        if wave.unit != u.AA:
+            wave = wave.to(u.AA)
+        trans_new = trans_interpolator(wave.value)
+        out = simpson(flux * trans_new * wave, x=wave.value) / simpson(trans_new * wave, x=wave.value)
         return out * (u.erg/u.s/u.cm/u.cm/u.AA)
 
 
