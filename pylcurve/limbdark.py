@@ -29,20 +29,22 @@ def build_ld_interpolator():
         ld_ms_interpolators = dict()
         ld_interpolator = dict()
         for band in hcam.bands + sdss.bands + tess.bands + bessell.bands + galex.bands:
-            filename_wd = f"{fpath}/WD/DA_LDCs_{band}.dat"
+            filename_wd = f"{fpath}/WD/DA_LDCs_{band}_new.dat"
             tab_wd = Table.read(filename_wd, format='ascii')
             wd_coords_in = list(zip(tab_wd['Teff'], tab_wd['log(g)']))
             wd_coords_out = list(zip(tab_wd['a1'], tab_wd['a2'],
-                                    tab_wd['a3'], tab_wd['a4']))
+                                     tab_wd['a3'], tab_wd['a4'],
+                                     tab_wd['integrated_volume']))
             ld_wd_interpolators[band] = LinearNDInterpolator(wd_coords_in,
                                                             wd_coords_out,
                                                             rescale=True)
 
-            filename_ms = f"{fpath}/MS/MS_LDCs_{band}.dat"
+            filename_ms = f"{fpath}/MS/MS_LDCs_{band}_new.dat"
             tab_ms = Table.read(filename_ms, format='ascii')
             ms_coords_in = list(zip(tab_ms['Teff'], tab_ms['log(g)']))
             ms_coords_out = list(zip(tab_ms['a1'], tab_ms['a2'],
-                                    tab_ms['a3'], tab_ms['a4']))
+                                     tab_ms['a3'], tab_ms['a4'],
+                                     tab_ms['integrated_volume']))
             ld_ms_interpolators[band] = LinearNDInterpolator(ms_coords_in,
                                                             ms_coords_out,
                                                             rescale=True)

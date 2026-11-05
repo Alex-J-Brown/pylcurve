@@ -104,13 +104,13 @@ def get_ldcs(teff_1, logg_1, band, star_type_1='WD',
 
     ldcs = dict()
 
-    ldcs['ldc1_1'], ldcs['ldc1_2'], ldcs['ldc1_3'], ldcs['ldc1_4'] = (
+    ldcs['ldc1_1'], ldcs['ldc1_2'], ldcs['ldc1_3'], ldcs['ldc1_4'], _ = (
         ld_interpolator[star_type_1][band](teff_1, logg_1)
     )
     if star_type_2:
         if teff_2 < 2300:
             teff_2 = 2300
-        ldcs['ldc2_1'], ldcs['ldc2_2'], ldcs['ldc2_3'], ldcs['ldc2_4'] = (
+        ldcs['ldc2_1'], ldcs['ldc2_2'], ldcs['ldc2_3'], ldcs['ldc2_4'], _ = (
             ld_interpolator[star_type_2][band](teff_2, logg_2)
         )
     return ldcs
