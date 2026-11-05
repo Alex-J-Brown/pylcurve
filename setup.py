@@ -35,7 +35,7 @@ scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
 
 setup(
     name='pylcurve',
-    version='0.1.10',
+    version='0.2.0',
     description="Python wrapper for lcurve fitting",
     long_description=readme + '\n\n' + history,
     author="Stuart Littlefair",
